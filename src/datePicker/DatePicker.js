@@ -1,4 +1,4 @@
-import React, {createContext, useReducer, useContext, useState} from 'react';
+import React, {createContext, useReducer, useContext, useState, forwardRef, useImperativeHandle, useRef} from 'react';
 import {View, StyleSheet} from 'react-native';
 import PropTypes from 'prop-types';
 
@@ -41,8 +41,9 @@ const useCalendar = () => {
   return contextValue;
 };
 
-const DatePicker = props => {
+const DatePicker = forwardRef((props, ref) => {
   const calendarUtils = new utils(props);
+  const selectTimeRef = useRef(null);
   const contextValue = {
     ...props,
     reverse: props.reverse === 'unset' ? !props.isGregorian : props.reverse,
@@ -59,6 +60,10 @@ const DatePicker = props => {
   };
   const [minHeight, setMinHeight] = useState(300);
   const style = styles(contextValue.options);
+
+  useImperativeHandle(ref, () => ({
+    getTime: () => selectTimeRef.current.selectTime()
+  }))
 
   const renderBody = () => {
     switch (contextValue.mode) {
@@ -81,7 +86,7 @@ const DatePicker = props => {
       case 'monthYear':
         return <SelectMonth />;
       case 'time':
-        return <SelectTime />;
+        return <SelectTime ref={selectTimeRef} confirmButtonVisible={props.confirmButtonVisible} />;
     }
   };
 
@@ -94,7 +99,7 @@ const DatePicker = props => {
       </View>
     </CalendarContext.Provider>
   );
-};
+});
 
 const styles = theme =>
   StyleSheet.create({

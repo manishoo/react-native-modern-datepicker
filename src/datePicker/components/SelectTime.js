@@ -1,14 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
-import {
-  View,
-  StyleSheet,
-  Text,
-  Animated,
-  FlatList,
-  Easing,
-  TouchableOpacity,
-  I18nManager,
-} from 'react-native';
+import {Animated, Easing, I18nManager, StyleSheet, Text, TouchableOpacity, View,} from 'react-native';
+import {FlatList} from 'react-native-gesture-handler';
 
 import {useCalendar} from '../DatePicker';
 
@@ -114,7 +106,7 @@ const TimeScroller = ({title, data, onChange}) => {
   );
 };
 
-const SelectTime = () => {
+const SelectTime = React.forwardRef(({confirmButtonVisible}, ref) => {
   const {options, state, utils, minuteInterval, mode, onTimeChange} = useCalendar();
   const [mainState, setMainState] = state;
   const [show, setShow] = useState(false);
@@ -127,10 +119,10 @@ const SelectTime = () => {
 
   useEffect(() => {
     show &&
-      setTime({
-        minute: 0,
-        hour: 0,
-      });
+    setTime({
+      minute: 0,
+      hour: 0,
+    });
   }, [show]);
 
   useEffect(() => {
@@ -153,18 +145,21 @@ const SelectTime = () => {
       activeDate: utils.getFormated(newTime),
       selectedDate: mainState.selectedDate
         ? utils.getFormated(
-            utils
-              .getDate(mainState.selectedDate)
-              .hour(time.hour)
-              .minute(time.minute),
-          )
+          utils
+            .getDate(mainState.selectedDate)
+            .hour(time.hour)
+            .minute(time.minute),
+        )
         : '',
     });
-    onTimeChange(utils.getFormated(newTime, 'timeFormat'));
+    const formattedTime = utils.getFormated(newTime, 'timeFormat');
+    onTimeChange(formattedTime);
     mode !== 'time' &&
-      setMainState({
-        type: 'toggleTime',
-      });
+    setMainState({
+      type: 'toggleTime',
+    });
+
+    return formattedTime
   };
 
   const containerStyle = [
@@ -182,6 +177,10 @@ const SelectTime = () => {
     },
   ];
 
+  React.useImperativeHandle(ref, () => ({
+    selectTime
+  }))
+
   return show ? (
     <Animated.View style={containerStyle}>
       <TimeScroller
@@ -195,9 +194,12 @@ const SelectTime = () => {
         onChange={minute => setTime({...time, minute})}
       />
       <View style={style.footer}>
-        <TouchableOpacity style={style.button} activeOpacity={0.8} onPress={selectTime}>
-          <Text style={style.btnText}>{utils.config.timeSelect}</Text>
-        </TouchableOpacity>
+        {
+          confirmButtonVisible &&
+          <TouchableOpacity style={style.button} activeOpacity={0.8} onPress={selectTime}>
+            <Text style={style.btnText}>{utils.config.timeSelect}</Text>
+          </TouchableOpacity>
+        }
         {mode !== 'time' && (
           <TouchableOpacity
             style={[style.button, style.cancelButton]}
@@ -213,7 +215,7 @@ const SelectTime = () => {
       </View>
     </Animated.View>
   ) : null;
-};
+});
 
 const styles = theme =>
   StyleSheet.create({
